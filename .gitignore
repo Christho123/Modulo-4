@@ -361,3 +361,6 @@ pyrightconfig.json
 
 # Se omite el archivo media
 media/profile_pictures
+
+# Archivos de configuración de testing
+pytest.ini
