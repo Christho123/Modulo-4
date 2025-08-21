@@ -19,9 +19,14 @@ class TherapistSerializer(serializers.ModelSerializer):
                 'error_messages': {
                     'invalid': "El correo debe ser válido y terminar en @gmail.com"
                 }
+            },
+            'phone': {
+            'error_messages': {
+                'max_length': "El teléfono no puede tener más de 15 dígitos."
             }
         }
-        
+    }
+
     def validate(self, attrs):
         """
         Asegura coherencia jerárquica:
@@ -120,7 +125,7 @@ class TherapistSerializer(serializers.ModelSerializer):
         if value:
             pattern = r'^[A-Za-z0-9._%+-]+@gmail\.com$'
             if not re.match(pattern, value):
-                raise serializers.ValidationError("El correo debe ser válido y terminar en @gmail.com (ejemplo: usuario@gmail.com).")
+                raise serializers.ValidationError("El correo debe ser válido y terminar en @gmail.com")
         return value
 
     def validate_country(self, value):
