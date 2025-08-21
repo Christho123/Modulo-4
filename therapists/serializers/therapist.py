@@ -1,10 +1,13 @@
 import re
 from datetime import date
 from rest_framework import serializers
-from ..models import Therapist
-
+from therapists.models import Therapist, Region, Province, District
 
 class TherapistSerializer(serializers.ModelSerializer):
+    # usa tus FK actuales *_fk
+    region_fk   = serializers.PrimaryKeyRelatedField(queryset=Region.objects.all(), allow_null=True, required=False)
+    province_fk = serializers.PrimaryKeyRelatedField(queryset=Province.objects.all(), allow_null=True, required=False)
+    district_fk = serializers.PrimaryKeyRelatedField(queryset=District.objects.all(), allow_null=True, required=False)
 
     class Meta:
         model = Therapist
@@ -18,6 +21,26 @@ class TherapistSerializer(serializers.ModelSerializer):
                 }
             }
         }
+        
+    def validate(self, attrs):
+        """
+        Asegura coherencia jerárquica:
+        province_fk debe pertenecer a region_fk
+        district_fk debe pertenecer a province_fk
+        """
+        region   = attrs.get("region_fk")   or getattr(self.instance, "region_fk", None)
+        province = attrs.get("province_fk") or getattr(self.instance, "province_fk", None)
+        district = attrs.get("district_fk") or getattr(self.instance, "district_fk", None)
+
+        if province and region and province.region_id != region.id:
+            raise serializers.ValidationError(
+                "La provincia seleccionada no pertenece a la región."
+            )
+        if district and province and district.province_id != province.id:
+            raise serializers.ValidationError(
+                "El distrito seleccionado no pertenece a la provincia."
+            )
+        return attrs
 
     def validate_document_number(self, value):
         doc_type = self.initial_data.get("document_type")
